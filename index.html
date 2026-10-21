@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10111b"><meta name="description" content="Levi Master AI — mistura e mastering de áudio online.">
+<link rel="manifest" href="/static/manifest.json"><link rel="stylesheet" href="/static/style.css">
+<title>Levi Master AI — Studio</title>
+</head>
+<body>
+<header class="top"><a class="brand" href="#"><span class="logo">LM</span><span>LEVI <b>MASTER AI</b><small>YOUR SOUND. REFINED.</small></span></a><span class="free">● GRATUITO</span></header>
+<main>
+<section class="hero"><div class="eyebrow"><span></span> AI AUDIO STUDIO</div><h1>O teu som.<br><em>Pronto para brilhar.</em></h1><p>Carrega a tua música. Deixa o Levi Master AI trabalhar no equilíbrio, na dinâmica e no volume. Ouve o resultado e exporta em WAV ou MP3.</p>
+<div class="meters"><div><strong>24-bit</strong><small>WAV HQ</small></div><div><strong>320 kbps</strong><small>MP3</small></div><div><strong>44.1 kHz</strong><small>OUTPUT</small></div></div></section>
+<section class="studio">
+<div class="section-title"><div><span class="step">01 / CONFIGURAR</span><h2>Começa o teu master</h2></div><span class="status"><i></i> ENGINE READY</span></div>
+<div class="modes"><button class="mode active" data-mode="mix"><span>✳</span><b>Mix & Master</b><small>Instrumental + voz</small></button><button class="mode" data-mode="master"><span>◉</span><b>Master Only</b><small>Música já misturada</small></button></div>
+<form id="form">
+<div id="mixFields" class="upload-grid">
+<label class="drop" for="instrumental"><span class="upload-icon">＋</span><b>Instrumental</b><small>WAV, MP3, FLAC, M4A</small><span class="filename" id="instName">Escolher ficheiro</span><input id="instrumental" name="instrumental" type="file" accept="audio/*"></label>
+<label class="drop" for="vocals"><span class="upload-icon">＋</span><b>Vocais</b><small>WAV, MP3, FLAC, M4A</small><span class="filename" id="voxName">Escolher ficheiro</span><input id="vocals" name="vocals" type="file" accept="audio/*"></label>
+</div>
+<div id="masterFields" class="upload-grid hidden"><label class="drop single" for="track"><span class="upload-icon">↑</span><b>Carrega a música</b><small>WAV, MP3, FLAC, M4A, AIFF</small><span class="filename" id="trackName">Escolher ficheiro</span><input id="track" name="track" type="file" accept="audio/*"></label></div>
+<div class="controls"><div class="control"><label for="vocalGain">Nível dos vocais <strong id="gainValue">0 dB</strong></label><input id="vocalGain" type="range" min="-12" max="12" value="0" step="1"><small>Ajusta a voz relativamente à instrumental.</small></div><div class="control"><label for="lufs">Volume final (LUFS) <strong id="lufsValue">−14 LUFS</strong></label><input id="lufs" type="range" min="-18" max="-9" value="-14" step="1"><small>−14 é um ponto de partida equilibrado para streaming.</small></div></div>
+<div class="format"><div><b>Formato de exportação</b><small>Escolhe como queres descarregar</small></div><div class="format-options"><label><input type="radio" name="format" value="wav" checked><span>WAV <small>24-bit</small></span></label><label><input type="radio" name="format" value="mp3"><span>MP3 <small>320 kbps</small></span></label></div></div>
+<div class="notice">ⓘ O resultado depende da qualidade dos ficheiros de origem. Ouve sempre o master antes de lançar a música.</div>
+<button id="submit" class="submit" type="submit"><span>✦</span> PROCESSAR A MINHA MÚSICA <b>→</b></button>
+<div id="progressWrap" class="progress-wrap hidden"><div class="progress-head"><span id="progressText">A processar áudio…</span><span id="progressPct">Aguarda</span></div><div class="progress"><span></span></div></div>
+<div id="result" class="result hidden"></div><div id="error" class="error hidden"></div>
+</form>
+</section>
+<section class="bottom"><div class="bottom-icon">♫</div><div><b>Feito para artistas independentes</b><p>Uma ferramenta de áudio acessível para preparar a tua música para a próxima etapa.</p></div></section>
+<footer>LEVI MASTER AI <span>•</span> PRIMEIRA VERSÃO · PROCESSAMENTO REAL DE ÁUDIO</footer>
+</main><script src="/static/app.js"></script>
+</body></html>
