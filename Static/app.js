@@ -1,70 +1,82 @@
 
+"use strict";
+
 const $ = (id) => document.getElementById(id);
 
-const form = $("audioForm");
+const form = $("form");
+const submitButton = $("submit");
 const modeButtons = document.querySelectorAll("[data-mode]");
+
 const instrumentalInput = $("instrumental");
 const vocalsInput = $("vocals");
 const trackInput = $("track");
 
-let currentMode = "master";
-let currentResults = [];
+let currentMode = "mix";
+let isProcessing = false;
+
+function setVisible(element, visible) {
+  if (!element) return;
+  element.classList.toggle("hidden", !visible);
+  element.hidden = !visible;
+}
 
 function showError(message) {
   const error = $("error");
-  if (error) {
-    error.textContent = message;
-    error.hidden = false;
-  }
+  if (!error) return;
+
+  error.textContent = message;
+  setVisible(error, true);
 }
 
 function clearError() {
   const error = $("error");
-  if (error) {
-    error.textContent = "";
-    error.hidden = true;
-  }
-}
+  if (!error) return;
 
-function setText(id, value) {
-  const element = $(id);
-  if (element) element.textContent = value;
+  error.textContent = "";
+  setVisible(error, false);
 }
 
 function selectedRadio(name, fallback) {
-  const selected = document.querySelector(`input[name="${name}"]:checked`);
+  const selected = document.querySelector(
+    `input[name="${name}"]:checked`
+  );
   return selected ? selected.value : fallback;
 }
 
 function updateMode(mode) {
-  currentMode = mode;
+  currentMode = mode === "master" ? "master" : "mix";
 
   modeButtons.forEach((button) => {
-    const active = button.dataset.mode === mode;
+    const active = button.dataset.mode === currentMode;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
 
-  const mixFields = $("mixFields");
-  const masterFields = $("masterFields");
+  setVisible($("mixFields"), currentMode === "mix");
+  setVisible($("masterFields"), currentMode === "master");
 
-  if (mixFields) mixFields.hidden = mode !== "mix";
-  if (masterFields) masterFields.hidden = mode !== "master";
+  if (instrumentalInput) {
+    instrumentalInput.required = currentMode === "mix";
+  }
+  if (vocalsInput) {
+    vocalsInput.required = currentMode === "mix";
+  }
+  if (trackInput) {
+    trackInput.required = currentMode === "master";
+  }
 
-  const instrumentalRequired = mode === "mix";
-  if (instrumentalInput) instrumentalInput.required = instrumentalRequired;
-  if (vocalsInput) vocalsInput.required = instrumentalRequired;
-  if (trackInput) trackInput.required = mode === "master";
-
-  const submit = $("submit");
-  if (submit) {
-    submit.textContent =
-      mode === "mix" ? "Misturar e masterizar" : "Masterizar áudio";
+  if (submitButton && !isProcessing) {
+    submitButton.innerHTML =
+      currentMode === "mix"
+        ? "<span>✦</span> MISTURAR E MASTERIZAR <b>→</b>"
+        : "<span>✦</span> MASTERIZAR A MINHA MÚSICA <b>→</b>";
   }
 }
 
 modeButtons.forEach((button) => {
-  button.addEventListener("click", () => updateMode(button.dataset.mode));
+  button.addEventListener("click", () => {
+    if (!isProcessing) updateMode(button.dataset.mode);
+  });
 });
 
 function connectRange(inputId, outputId, suffix = "") {
@@ -73,7 +85,11 @@ function connectRange(inputId, outputId, suffix = "") {
   if (!input || !output) return;
 
   const update = () => {
-    output.textContent = `${input.value}${suffix}`;
+    let value = input.value;
+    if (inputId === "lufs" && Number(value) < 0) {
+      value = "−" + Math.abs(Number(value));
+    }
+    output.textContent = `${value}${suffix}`;
   };
 
   input.addEventListener("input", update);
@@ -85,28 +101,49 @@ connectRange("lufs", "lufsValue", " LUFS");
 connectRange("bass", "bassValue", " dB");
 connectRange("treble", "trebleValue", " dB");
 connectRange("presence", "presenceValue", " dB");
-connectRange("compression", "compressionValue");
+
+const compressionInput = $("compression");
+const compressionOutput = $("compressionValue");
+
+if (compressionInput && compressionOutput) {
+  const updateCompression = () => {
+    const value = Number(compressionInput.value);
+    const label =
+      value <= 2 ? "Leve" :
+      value <= 5 ? "Média" :
+      value <= 8 ? "Forte" : "Muito forte";
+
+    compressionOutput.textContent = `${label} (${value}/10)`;
+  };
+
+  compressionInput.addEventListener("input", updateCompression);
+  updateCompression();
+}
 
 function showFileName(input, outputId) {
   const output = $(outputId);
   if (!input || !output) return;
 
   input.addEventListener("change", () => {
-    output.textContent = input.files?.[0]?.name || "Nenhum ficheiro selecionado";
+    output.textContent =
+      input.files?.[0]?.name || "Escolher ficheiro";
   });
 }
 
-showFileName(instrumentalInput, "instrumentalName");
-showFileName(vocalsInput, "vocalsName");
+showFileName(instrumentalInput, "instName");
+showFileName(vocalsInput, "voxName");
 showFileName(trackInput, "trackName");
 
-function getAudioFile(mode) {
-  if (mode === "mix") {
-    if (!instrumentalInput?.files?.[0] || !vocalsInput?.files?.[0]) {
-      throw new Error("Seleciona o instrumental e a voz antes de continuar.");
+function validateFiles() {
+  if (currentMode === "mix") {
+    if (!instrumentalInput?.files?.[0]) {
+      throw new Error("Seleciona o ficheiro instrumental.");
+    }
+    if (!vocalsInput?.files?.[0]) {
+      throw new Error("Seleciona o ficheiro dos vocais.");
     }
   } else if (!trackInput?.files?.[0]) {
-    throw new Error("Seleciona um ficheiro de áudio para masterizar.");
+    throw new Error("Seleciona a música que pretendes masterizar.");
   }
 }
 
@@ -115,13 +152,12 @@ function makeFormData(profile) {
 
   data.append("mode", currentMode);
   data.append("output_format", selectedRadio("format", "wav"));
-  data.append("target_lufs", $("lufs")?.value || "-14");
-  data.append("vocal_gain", $("vocalGain")?.value || "0");
-
-  data.append("bass", $("bass")?.value || "0");
-  data.append("treble", $("treble")?.value || "0");
-  data.append("presence", $("presence")?.value || "0");
-  data.append("compression", $("compression")?.value || "4");
+  data.append("target_lufs", $("lufs").value);
+  data.append("vocal_gain", $("vocalGain").value);
+  data.append("bass", $("bass").value);
+  data.append("treble", $("treble").value);
+  data.append("presence", $("presence").value);
+  data.append("compression", $("compression").value);
   data.append("profile", profile);
 
   if (currentMode === "mix") {
@@ -134,31 +170,43 @@ function makeFormData(profile) {
   return data;
 }
 
-function createVersionCard(title, description, blob, filename) {
-  const container = document.createElement("article");
-  container.className = "version-card";
+function setProgress(percent, message) {
+  const wrap = $("progressWrap");
+  const text = $("progressText");
+  const pct = $("progressPct");
+  const bar = document.querySelector(".progress span");
+
+  setVisible(wrap, true);
+
+  if (text) text.textContent = message;
+  if (pct) pct.textContent = `${Math.round(percent)}%`;
+  if (bar) bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+}
+
+function createVersionCard(version) {
+  const card = document.createElement("article");
+  card.className = "version-card";
 
   const heading = document.createElement("h3");
-  heading.textContent = title;
+  heading.textContent = version.title;
 
-  const detail = document.createElement("p");
-  detail.textContent = description;
+  const description = document.createElement("p");
+  description.textContent = version.description;
 
   const audio = document.createElement("audio");
   audio.controls = true;
   audio.preload = "metadata";
-
-  const url = URL.createObjectURL(blob);
-  audio.src = url;
+  audio.src = version.url;
+  audio.style.width = "100%";
 
   const download = document.createElement("a");
-  download.href = url;
-  download.download = filename;
+  download.href = version.url;
+  download.download = version.filename;
   download.className = "download-link";
   download.textContent = "Descarregar esta versão";
 
-  container.append(heading, detail, audio, download);
-  return container;
+  card.append(heading, description, audio, download);
+  return card;
 }
 
 function showVersions(versions) {
@@ -172,141 +220,147 @@ function showVersions(versions) {
 
   const description = document.createElement("p");
   description.textContent =
-    "Compara as duas masterizações e descarrega a tua favorita.";
+    "Compara as duas masterizações antes de descarregar.";
 
-  const cards = document.createElement("div");
-  cards.className = "versions-grid";
+  const grid = document.createElement("div");
+  grid.className = "versions-grid";
 
   versions.forEach((version) => {
-    cards.appendChild(
-      createVersionCard(
-        version.title,
-        version.description,
-        version.blob,
-        version.filename
-      )
-    );
+    grid.appendChild(createVersionCard(version));
   });
 
-  result.append(heading, description, cards);
-  result.hidden = false;
+  result.append(heading, description, grid);
+  setVisible(result, true);
 }
 
-async function processVersion(profile, index, total) {
-  const progress = $("progress");
-  const progressText = $("progressText");
+async function processVersion(profile, index) {
+  const names = {
+    natural: "Natural Pro",
+    modern: "Perfect Modern"
+  };
 
-  if (progress) {
-    progress.hidden = false;
-    progress.max = total;
-    progress.value = index;
-  }
-
-  if (progressText) {
-    progressText.textContent =
-      `A processar versão ${index} de ${total}...`;
-  }
+  setProgress(
+    index === 1 ? 10 : 55,
+    `A processar ${names[profile]}...`
+  );
 
   const response = await fetch("/api/process", {
     method: "POST",
-    body: makeFormData(profile),
+    body: makeFormData(profile)
   });
 
   if (!response.ok) {
-    let message = `Erro do servidor (${response.status}).`;
+    let message = `O servidor respondeu com o erro ${response.status}.`;
 
     try {
       const body = await response.json();
       if (body.detail) {
-        message =
-          typeof body.detail === "string"
-            ? body.detail
-            : JSON.stringify(body.detail);
+        message = typeof body.detail === "string"
+          ? body.detail
+          : JSON.stringify(body.detail);
       }
     } catch (_) {
-      // Mantém a mensagem padrão.
+      // Mantém a mensagem de erro padrão.
     }
 
     throw new Error(message);
   }
 
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json") ||
+      contentType.includes("text/html")) {
+    throw new Error(
+      "O servidor não devolveu um ficheiro de áudio válido."
+    );
+  }
+
   const blob = await response.blob();
 
-  const extension = selectedRadio("format", "wav") === "mp3" ? "mp3" : "wav";
+  if (!blob.size) {
+    throw new Error("O servidor devolveu um áudio vazio.");
+  }
+
+  const extension = selectedRadio("format", "wav");
+  const url = URL.createObjectURL(blob);
 
   return {
-    title: profile === "natural" ? "Natural Pro" : "Perfect Modern",
-    description:
-      profile === "natural"
-        ? "Processamento subtil para preservar o carácter original."
-        : "Processamento mais presente e moderno, com maior controlo dinâmico.",
+    title: names[profile],
+    description: profile === "natural"
+      ? "Masterização natural, com equilíbrio e dinâmica."
+      : "Masterização moderna, com presença e maior controlo.",
     blob,
-    filename: `levi-master-${profile}.${extension}`,
+    url,
+    filename: `levi-master-${profile}.${extension}`
   };
 }
 
 if (form) {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    if (isProcessing) return;
+
     clearError();
 
+    const result = $("result");
+    if (result) {
+      result.replaceChildren();
+      setVisible(result, false);
+    }
+
     try {
-      getAudioFile(currentMode);
+      validateFiles();
     } catch (error) {
       showError(error.message);
       return;
     }
 
-    const submit = $("submit");
-    const progress = $("progress");
-    const progressText = $("progressText");
-    const result = $("result");
+    isProcessing = true;
 
-    currentResults = [];
-    if (result) {
-      result.replaceChildren();
-      result.hidden = true;
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "A preparar áudio...";
     }
 
-    if (submit) {
-      submit.disabled = true;
-      submit.textContent = "A processar...";
-    }
-
-    if (progress) {
-      progress.hidden = false;
-      progress.max = 2;
-      progress.value = 0;
-    }
+    const versions = [];
 
     try {
-      const natural = await processVersion("natural", 1, 2);
-      currentResults.push(natural);
+      setProgress(5, "A enviar os ficheiros para o servidor...");
 
-      const modern = await processVersion("modern", 2, 2);
-      currentResults.push(modern);
+      versions.push(await processVersion("natural", 1));
 
-      showVersions(currentResults);
+      setProgress(55, "Primeira versão concluída. A preparar a segunda...");
 
-      if (progressText) {
-        progressText.textContent = "Concluído! Compara as duas versões.";
-      }
-      if (progress) progress.value = 2;
+      versions.push(await processVersion("modern", 2));
+
+      showVersions(versions);
+      setProgress(100, "Concluído! Os teus áudios estão prontos.");
     } catch (error) {
+      versions.forEach((version) => URL.revokeObjectURL(version.url));
+
       showError(
         error instanceof Error
           ? error.message
           : "Não foi possível processar o áudio."
       );
+
+      const progressText = $("progressText");
       if (progressText) progressText.textContent = "O processamento falhou.";
     } finally {
-      if (submit) {
-        submit.disabled = false;
-        submit.textContent =
-          currentMode === "mix" ? "Misturar e masterizar" : "Masterizar áudio";
+      isProcessing = false;
+
+      if (submitButton) {
+        submitButton.disabled = false;
       }
+
+      updateMode(currentMode);
     }
   });
+} else {
+  console.error(
+    "Levi Master AI: formulário #form não encontrado no index.html."
+  );
 }
 
 updateMode(currentMode);
