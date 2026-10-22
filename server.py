@@ -1,295 +1,273 @@
 
-const $ = (id) => document.getElementById(id);
+import asyncio
+import shutil
+import subprocess
+import uuid
+from pathlib import Path
 
-const form = $("form");
-const modeButtons = document.querySelectorAll("[data-mode]");
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
-const instrumentalInput = $("instrumental");
-const vocalsInput = $("vocals");
-const trackInput = $("track");
+app = FastAPI(title="Levi Master AI")
 
-let currentMode = "mix";
-let activeUrls = [];
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+if not STATIC_DIR.exists():
+    STATIC_DIR = BASE_DIR / "Static"
 
-function showError(message) {
-  const error = $("error");
-  if (!error) return;
-  error.textContent = message;
-  error.classList.remove("hidden");
-  error.hidden = false;
+WORK_DIR = BASE_DIR / "work"
+OUT_DIR = BASE_DIR / "output"
+WORK_DIR.mkdir(parents=True, exist_ok=True)
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+ALLOWED_EXTENSIONS = {
+    ".wav", ".mp3", ".m4a", ".aac", ".flac",
+    ".ogg", ".aiff", ".aif"
 }
 
-function clearError() {
-  const error = $("error");
-  if (!error) return;
-  error.textContent = "";
-  error.classList.add("hidden");
-  error.hidden = true;
-}
+if not STATIC_DIR.exists():
+    raise RuntimeError("A pasta static não foi encontrada.")
 
-function updateMode(mode) {
-  currentMode = mode;
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-  modeButtons.forEach((button) => {
-    const active = button.dataset.mode === mode;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", String(active));
-  });
 
-  $("mixFields").classList.toggle("hidden", mode !== "mix");
-  $("masterFields").classList.toggle("hidden", mode !== "master");
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    index_file = STATIC_DIR / "index.html"
+    if not index_file.exists():
+        raise HTTPException(status_code=500, detail="index.html não encontrado.")
+    return index_file.read_text(encoding="utf-8")
 
-  instrumentalInput.required = mode === "mix";
-  vocalsInput.required = mode === "mix";
-  trackInput.required = mode === "master";
 
-  $("submit").innerHTML = mode === "mix"
-    ? "<span>✦</span> MISTURAR E MASTERIZAR <b>→</b>"
-    : "<span>✦</span> MASTERIZAR ÁUDIO <b>→</b>";
-}
-
-modeButtons.forEach((button) => {
-  button.addEventListener("click", () => updateMode(button.dataset.mode));
-});
-
-function connectRange(inputId, outputId, suffix = " dB") {
-  const input = $(inputId);
-  const output = $(outputId);
-  if (!input || !output) return;
-
-  const update = () => {
-    output.textContent = inputId === "compression"
-      ? (Number(input.value) <= 3 ? "Leve" :
-         Number(input.value) <= 6 ? "Média" : "Forte")
-      : `${input.value}${suffix}`;
-  };
-
-  input.addEventListener("input", update);
-  update();
-}
-
-connectRange("vocalGain", "gainValue");
-connectRange("lufs", "lufsValue", " LUFS");
-connectRange("bass", "bassValue");
-connectRange("treble", "trebleValue");
-connectRange("presence", "presenceValue");
-connectRange("compression", "compressionValue", "");
-
-function showFileName(input, outputId) {
-  const output = $(outputId);
-  if (!input || !output) return;
-
-  input.addEventListener("change", () => {
-    output.textContent = input.files?.[0]?.name || "Escolher ficheiro";
-  });
-}
-
-showFileName(instrumentalInput, "instName");
-showFileName(vocalsInput, "voxName");
-showFileName(trackInput, "trackName");
-
-function validateFiles() {
-  if (currentMode === "mix") {
-    if (!instrumentalInput.files.length || !vocalsInput.files.length) {
-      throw new Error("Seleciona o instrumental e a voz antes de continuar.");
+@app.get("/api/health")
+async def health():
+    return {
+        "status": "ok",
+        "ffmpeg_available": shutil.which("ffmpeg") is not None,
+        "service": "Levi Master AI"
     }
 
-    if (
-      instrumentalInput.files[0].size === 0 ||
-      vocalsInput.files[0].size === 0
-    ) {
-      throw new Error("Um dos ficheiros selecionados está vazio.");
-    }
-  } else {
-    if (!trackInput.files.length) {
-      throw new Error("Seleciona uma música para masterizar.");
-    }
 
-    if (trackInput.files[0].size === 0) {
-      throw new Error("O ficheiro selecionado está vazio.");
-    }
-  }
+async def save_upload(upload: UploadFile, destination: Path):
+    suffix = Path(upload.filename or "").suffix.lower()
 
-  const files = currentMode === "mix"
-    ? [instrumentalInput.files[0], vocalsInput.files[0]]
-    : [trackInput.files[0]];
+    if suffix not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato não suportado: {suffix or 'desconhecido'}."
+        )
 
-  const maxBytes = 200 * 1024 * 1024;
-  const allowed = /\.(wav|mp3|m4a|aac|flac|ogg|aiff|aif)$/i;
+    total = 0
+    try:
+        with destination.open("wb") as output:
+            while True:
+                chunk = await upload.read(1024 * 1024)
+                if not chunk:
+                    break
 
-  for (const file of files) {
-    if (!allowed.test(file.name)) {
-      throw new Error(`Formato não suportado: ${file.name}`);
-    }
+                total += len(chunk)
+                if total > MAX_UPLOAD_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="O ficheiro excede o limite de 200 MB."
+                    )
+                output.write(chunk)
+    finally:
+        await upload.close()
 
-    if (file.size > maxBytes) {
-      throw new Error("Cada ficheiro deve ter no máximo 200 MB.");
-    }
-  }
-}
+    if total == 0:
+        destination.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail="O áudio está vazio.")
 
-function makeFormData(profile) {
-  const data = new FormData();
+    return destination
 
-  data.append("mode", currentMode);
-  data.append(
-    "output_format",
-    document.querySelector('input[name="format"]:checked')?.value || "wav"
-  );
-  data.append("target_lufs", $("lufs").value);
-  data.append("vocal_gain", $("vocalGain").value);
-  data.append("bass", $("bass").value);
-  data.append("treble", $("treble").value);
-  data.append("presence", $("presence").value);
-  data.append("compression", $("compression").value);
-  data.append("profile", profile);
 
-  if (currentMode === "mix") {
-    data.append("instrumental", instrumentalInput.files[0]);
-    data.append("vocals", vocalsInput.files[0]);
-  } else {
-    data.append("track", trackInput.files[0]);
-  }
+def number_value(value, name, minimum, maximum):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail=f"Valor inválido: {name}.")
 
-  return data;
-}
+    if not minimum <= number <= maximum:
+        raise HTTPException(
+            status_code=400,
+            detail=f"{name} deve estar entre {minimum} e {maximum}."
+        )
+    return number
 
-function setProgress(percent, message) {
-  const wrap = $("progressWrap");
-  wrap.classList.remove("hidden");
-  wrap.hidden = false;
 
-  $("progressText").textContent = message;
-  $("progressPct").textContent = `${percent}%`;
+def build_filter_chain(profile, target_lufs, bass, treble,
+                       presence, compression):
+    filters = ["highpass=f=25"]
 
-  const bar = wrap.querySelector(".progress span");
-  if (bar) bar.style.width = `${percent}%`;
-}
+    if bass:
+        filters.append(f"equalizer=f=100:t=q:w=1:g={bass:.2f}")
+    if presence:
+        filters.append(f"equalizer=f=3000:t=q:w=1:g={presence:.2f}")
+    if treble:
+        filters.append(f"equalizer=f=10000:t=q:w=1:g={treble:.2f}")
 
-function clearResults() {
-  activeUrls.forEach((url) => URL.revokeObjectURL(url));
-  activeUrls = [];
+    if profile == "natural":
+        ratio = 1.8 + compression * 0.22
+        attack, release = 20, 180
+    else:
+        ratio = 2.5 + compression * 0.35
+        attack, release = 8, 100
+        filters.append("equalizer=f=5000:t=q:w=1:g=0.5")
 
-  const result = $("result");
-  result.replaceChildren();
-  result.classList.add("hidden");
-  result.hidden = true;
-}
+    if compression > 0:
+        threshold = -18 - compression * 0.6
+        filters.append(
+            f"acompressor=threshold={threshold:.2f}dB:"
+            f"ratio={ratio:.2f}:attack={attack}:release={release}:makeup=1"
+        )
 
-async function processVersion(profile, index) {
-  const label = profile === "natural" ? "Natural Pro" : "Perfect Modern";
+    filters.append(f"loudnorm=I={target_lufs:.1f}:TP=-1.0:LRA=11")
+    filters.append("alimiter=limit=0.891")
+    return ",".join(filters)
 
-  setProgress(
-    index === 1 ? 10 : 55,
-    `A processar versão ${index} de 2: ${label}…`
-  );
 
-  const response = await fetch("/api/process", {
-    method: "POST",
-    body: makeFormData(profile)
-  });
+def run_ffmpeg(command):
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=600
+        )
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=504,
+            detail="O processamento demorou demasiado. Tenta um áudio mais curto."
+        )
 
-  if (!response.ok) {
-    let message = `O servidor devolveu o erro ${response.status}.`;
+    if result.returncode != 0:
+        detail = (result.stderr or "Erro desconhecido do FFmpeg")[-2500:]
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao processar áudio: {detail}"
+        )
+    return result
 
-    try {
-      const body = await response.json();
-      if (body.detail) {
-        message = typeof body.detail === "string"
-          ? body.detail
-          : JSON.stringify(body.detail);
-      }
-    } catch (_) {
-      // Mantém a mensagem de erro original.
-    }
 
-    throw new Error(message);
-  }
+@app.post("/api/process")
+async def process_audio(
+    mode: str = Form(...),
+    output_format: str = Form("wav"),
+    target_lufs: str = Form("-14"),
+    vocal_gain: str = Form("0"),
+    bass: str = Form("0"),
+    treble: str = Form("0"),
+    presence: str = Form("0"),
+    compression: str = Form("4"),
+    profile: str = Form("natural"),
+    instrumental: UploadFile = File(None),
+    vocals: UploadFile = File(None),
+    track: UploadFile = File(None)
+):
+    if not shutil.which("ffmpeg"):
+        raise HTTPException(
+            status_code=500,
+            detail="FFmpeg não está instalado ou não está disponível no servidor."
+        )
 
-  const blob = await response.blob();
+    if mode not in {"mix", "master"}:
+        raise HTTPException(status_code=400, detail="Modo inválido.")
 
-  if (!blob.size) {
-    throw new Error(`O servidor devolveu um ficheiro vazio para ${label}.`);
-  }
+    if output_format not in {"wav", "mp3"}:
+        raise HTTPException(status_code=400, detail="Formato de saída inválido.")
 
-  const url = URL.createObjectURL(blob);
-  activeUrls.push(url);
+    if profile not in {"natural", "modern"}:
+        raise HTTPException(status_code=400, detail="Perfil inválido.")
 
-  return { label, url, blob };
-}
+    lufs = number_value(target_lufs, "LUFS", -18, -9)
+    gain = number_value(vocal_gain, "Ganho vocal", -12, 12)
+    bass_db = number_value(bass, "Graves", -6, 6)
+    treble_db = number_value(treble, "Agudos", -6, 6)
+    presence_db = number_value(presence, "Presença", -6, 6)
+    comp = number_value(compression, "Compressão", 0, 10)
 
-function showVersions(versions) {
-  const result = $("result");
-  result.replaceChildren();
+    job_dir = WORK_DIR / uuid.uuid4().hex
+    job_dir.mkdir(parents=True, exist_ok=True)
+    output_path = OUT_DIR / f"levi_master_{uuid.uuid4().hex}.{output_format}"
 
-  const heading = document.createElement("h2");
-  heading.textContent = "A tua música está pronta!";
-  result.appendChild(heading);
+    try:
+        if mode == "mix":
+            if instrumental is None or vocals is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Seleciona o instrumental e os vocais."
+                )
 
-  const description = document.createElement("p");
-  description.textContent =
-    "Escuta as duas versões e descarrega a que preferires.";
-  result.appendChild(description);
+            inst_suffix = Path(instrumental.filename or "").suffix.lower()
+            vocal_suffix = Path(vocals.filename or "").suffix.lower()
 
-  versions.forEach((version) => {
-    const card = document.createElement("article");
-    card.className = "version-card";
+            inst_path = await save_upload(
+                instrumental, job_dir / f"instrumental{inst_suffix}"
+            )
+            vocal_path = await save_upload(
+                vocals, job_dir / f"vocals{vocal_suffix}"
+            )
 
-    const title = document.createElement("h3");
-    title.textContent = version.label;
+            filters = build_filter_chain(
+                profile, lufs, bass_db, treble_db, presence_db, comp
+            )
 
-    const audio = document.createElement("audio");
-    audio.controls = true;
-    audio.preload = "metadata";
-    audio.src = version.url;
-    audio.style.width = "100%";
+            command = [
+                "ffmpeg", "-y",
+                "-i", str(inst_path),
+                "-i", str(vocal_path),
+                "-filter_complex",
+                (
+                    "[0:a]highpass=f=25[inst];"
+                    f"[1:a]volume={gain:.2f}dB,highpass=f=70[voc];"
+                    f"[inst][voc]amix=inputs=2:duration=longest:"
+                    f"dropout_transition=2,{filters}[out]"
+                ),
+                "-map", "[out]"
+            ]
+        else:
+            if track is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Seleciona uma música para masterizar."
+                )
 
-    const download = document.createElement("a");
-    download.href = version.url;
-    download.download =
-      `levi-master-${version.label.toLowerCase().replace(/\s+/g, "-")}.` +
-      (document.querySelector('input[name="format"]:checked')?.value || "wav");
-    download.textContent = "Descarregar versão";
-    download.className = "download-button";
+            suffix = Path(track.filename or "").suffix.lower()
+            track_path = await save_upload(track, job_dir / f"track{suffix}")
 
-    card.append(title, audio, download);
-    result.appendChild(card);
-  });
+            filters = build_filter_chain(
+                profile, lufs, bass_db, treble_db, presence_db, comp
+            )
 
-  result.classList.remove("hidden");
-  result.hidden = false;
-  result.scrollIntoView({ behavior: "smooth", block: "start" });
-}
+            command = [
+                "ffmpeg", "-y",
+                "-i", str(track_path),
+                "-af", filters
+            ]
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  clearError();
-  clearResults();
+        if output_format == "wav":
+            command += ["-c:a", "pcm_s24le", "-ar", "44100"]
+        else:
+            command += ["-c:a", "libmp3lame", "-b:a", "320k", "-ar", "44100"]
 
-  const submit = $("submit");
-  submit.disabled = true;
+        command.append(str(output_path))
+        await asyncio.to_thread(run_ffmpeg, command)
 
-  try {
-    validateFiles();
+        if not output_path.exists() or output_path.stat().st_size == 0:
+            raise HTTPException(
+                status_code=500,
+                detail="O servidor não conseguiu gerar o áudio final."
+            )
 
-    submit.textContent = "A processar…";
-    setProgress(5, "A preparar os ficheiros de áudio…");
+        return FileResponse(
+            path=str(output_path),
+            media_type="audio/wav" if output_format == "wav" else "audio/mpeg",
+            filename=f"levi-master-{profile}.{output_format}",
+            background=None
+        )
 
-    const versions = [];
-
-    versions.push(await processVersion("natural", 1));
-    setProgress(55, "Primeira versão concluída. A preparar a segunda…");
-
-    versions.push(await processVersion("modern", 2));
-
-    setProgress(100, "Processamento concluído!");
-    showVersions(versions);
-  } catch (error) {
-    showError(error.message || "Ocorreu um erro ao processar o áudio.");
-  } finally {
-    submit.disabled = false;
-    updateMode(currentMode);
-  }
-});
-
-updateMode("mix");
+    finally:
+        shutil.rmtree(job_dir, ignore_errors=True)
