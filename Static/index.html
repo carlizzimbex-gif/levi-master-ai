@@ -1,34 +1,168 @@
+
 <!doctype html>
 <html lang="pt">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#10111b"><meta name="description" content="Levi Master AI — mistura e mastering de áudio online.">
-<link rel="manifest" href="/static/manifest.json"><link rel="stylesheet" href="/static/style.css">
-<title>Levi Master AI — Studio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#10111b">
+  <meta name="description" content="Levi Master AI Studio Pro — mistura e masterização de áudio online.">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Levi Master AI — Studio Pro</title>
 </head>
 <body>
-<header class="top"><a class="brand" href="#"><span class="logo">LM</span><span>LEVI <b>MASTER AI</b><small>YOUR SOUND. REFINED.</small></span></a><span class="free">● GRATUITO</span></header>
+<header class="top">
+  <a class="brand" href="/">
+    <span class="logo">LM</span>
+    <span>LEVI <b>MASTER AI</b><small>YOUR SOUND. REFINED.</small></span>
+  </a>
+  <span class="free">● STUDIO PRO</span>
+</header>
+
 <main>
-<section class="hero"><div class="eyebrow"><span></span> AI AUDIO STUDIO</div><h1>O teu som.<br><em>Pronto para brilhar.</em></h1><p>Carrega a tua música. Deixa o Levi Master AI trabalhar no equilíbrio, na dinâmica e no volume. Ouve o resultado e exporta em WAV ou MP3.</p>
-<div class="meters"><div><strong>24-bit</strong><small>WAV HQ</small></div><div><strong>320 kbps</strong><small>MP3</small></div><div><strong>44.1 kHz</strong><small>OUTPUT</small></div></div></section>
-<section class="studio">
-<div class="section-title"><div><span class="step">01 / CONFIGURAR</span><h2>Começa o teu master</h2></div><span class="status"><i></i> ENGINE READY</span></div>
-<div class="modes"><button class="mode active" data-mode="mix"><span>✳</span><b>Mix & Master</b><small>Instrumental + voz</small></button><button class="mode" data-mode="master"><span>◉</span><b>Master Only</b><small>Música já misturada</small></button></div>
-<form id="form">
-<div id="mixFields" class="upload-grid">
-<label class="drop" for="instrumental"><span class="upload-icon">＋</span><b>Instrumental</b><small>WAV, MP3, FLAC, M4A</small><span class="filename" id="instName">Escolher ficheiro</span><input id="instrumental" name="instrumental" type="file" accept="audio/*"></label>
-<label class="drop" for="vocals"><span class="upload-icon">＋</span><b>Vocais</b><small>WAV, MP3, FLAC, M4A</small><span class="filename" id="voxName">Escolher ficheiro</span><input id="vocals" name="vocals" type="file" accept="audio/*"></label>
-</div>
-<div id="masterFields" class="upload-grid hidden"><label class="drop single" for="track"><span class="upload-icon">↑</span><b>Carrega a música</b><small>WAV, MP3, FLAC, M4A, AIFF</small><span class="filename" id="trackName">Escolher ficheiro</span><input id="track" name="track" type="file" accept="audio/*"></label></div>
-<div class="controls"><div class="control"><label for="vocalGain">Nível dos vocais <strong id="gainValue">0 dB</strong></label><input id="vocalGain" type="range" min="-12" max="12" value="0" step="1"><small>Ajusta a voz relativamente à instrumental.</small></div><div class="control"><label for="lufs">Volume final (LUFS) <strong id="lufsValue">−14 LUFS</strong></label><input id="lufs" type="range" min="-18" max="-9" value="-14" step="1"><small>−14 é um ponto de partida equilibrado para streaming.</small></div></div>
-<div class="format"><div><b>Formato de exportação</b><small>Escolhe como queres descarregar</small></div><div class="format-options"><label><input type="radio" name="format" value="wav" checked><span>WAV <small>24-bit</small></span></label><label><input type="radio" name="format" value="mp3"><span>MP3 <small>320 kbps</small></span></label></div></div>
-<div class="notice">ⓘ O resultado depende da qualidade dos ficheiros de origem. Ouve sempre o master antes de lançar a música.</div>
-<button id="submit" class="submit" type="submit"><span>✦</span> PROCESSAR A MINHA MÚSICA <b>→</b></button>
-<div id="progressWrap" class="progress-wrap hidden"><div class="progress-head"><span id="progressText">A processar áudio…</span><span id="progressPct">Aguarda</span></div><div class="progress"><span></span></div></div>
-<div id="result" class="result hidden"></div><div id="error" class="error hidden"></div>
-</form>
-</section>
-<section class="bottom"><div class="bottom-icon">♫</div><div><b>Feito para artistas independentes</b><p>Uma ferramenta de áudio acessível para preparar a tua música para a próxima etapa.</p></div></section>
-<footer>LEVI MASTER AI <span>•</span> PRIMEIRA VERSÃO · PROCESSAMENTO REAL DE ÁUDIO</footer>
-</main><script src="/static/app.js"></script>
-</body></html>
+  <section class="hero">
+    <div class="eyebrow"><span></span> AI AUDIO STUDIO</div>
+    <h1>O teu som.<br><em>Pronto para brilhar.</em></h1>
+    <p>Prepara as tuas vozes, mistura a instrumental e aperfeiçoa a tua música com controlos de masterização. Compara duas versões antes de descarregar.</p>
+    <div class="meters">
+      <div><strong>24-bit</strong><small>WAV HQ</small></div>
+      <div><strong>320 kbps</strong><small>MP3</small></div>
+      <div><strong>44.1 kHz</strong><small>OUTPUT</small></div>
+    </div>
+  </section>
+
+  <section class="studio">
+    <div class="section-title">
+      <div>
+        <span class="step">01 / CONFIGURAR</span>
+        <h2>O teu projeto de áudio</h2>
+      </div>
+      <span class="status"><i></i> ENGINE READY</span>
+    </div>
+
+    <div class="modes">
+      <button type="button" class="mode active" data-mode="mix">
+        <span>✳</span><b>Mix & Master</b><small>Instrumental + voz</small>
+      </button>
+      <button type="button" class="mode" data-mode="master">
+        <span>◉</span><b>Master Only</b><small>Música já misturada</small>
+      </button>
+    </div>
+
+    <form id="form">
+      <div id="mixFields" class="upload-grid">
+        <label class="drop" for="instrumental">
+          <span class="upload-icon">＋</span>
+          <b>Instrumental</b>
+          <small>WAV, MP3, FLAC, M4A, AIFF</small>
+          <span class="filename" id="instName">Escolher ficheiro</span>
+          <input id="instrumental" name="instrumental" type="file" accept="audio/*">
+        </label>
+        <label class="drop" for="vocals">
+          <span class="upload-icon">＋</span>
+          <b>Vozes / Vocais</b>
+          <small>WAV, MP3, FLAC, M4A, AIFF</small>
+          <span class="filename" id="voxName">Escolher ficheiro</span>
+          <input id="vocals" name="vocals" type="file" accept="audio/*">
+        </label>
+      </div>
+
+      <div id="masterFields" class="upload-grid hidden">
+        <label class="drop single" for="track">
+          <span class="upload-icon">↑</span>
+          <b>Carrega a música</b>
+          <small>WAV, MP3, FLAC, M4A, AIFF</small>
+          <span class="filename" id="trackName">Escolher ficheiro</span>
+          <input id="track" name="track" type="file" accept="audio/*">
+        </label>
+      </div>
+
+      <div class="subheading">02 / MISTURA VOCAL</div>
+      <div class="controls">
+        <div class="control">
+          <label for="vocalGain">Nível dos vocais <strong id="gainValue">0 dB</strong></label>
+          <input id="vocalGain" name="vocal_gain" type="range" min="-12" max="12" value="0" step="1">
+          <small>Ajusta a voz relativamente à instrumental.</small>
+        </div>
+        <div class="control">
+          <label for="lufs">Volume final <strong id="lufsValue">−14 LUFS</strong></label>
+          <input id="lufs" name="target_lufs" type="range" min="-18" max="-9" value="-14" step="1">
+          <small>Define o alvo de loudness da masterização.</small>
+        </div>
+      </div>
+
+      <div class="subheading">03 / MASTERIZAÇÃO</div>
+      <div class="controls">
+        <div class="control">
+          <label for="bass">Graves <strong id="bassValue">0 dB</strong></label>
+          <input id="bass" name="bass" type="range" min="-6" max="6" value="0" step="1">
+          <small>Controla a energia das frequências baixas.</small>
+        </div>
+        <div class="control">
+          <label for="treble">Agudos <strong id="trebleValue">0 dB</strong></label>
+          <input id="treble" name="treble" type="range" min="-6" max="6" value="0" step="1">
+          <small>Ajusta o brilho geral da música.</small>
+        </div>
+        <div class="control">
+          <label for="presence">Presença <strong id="presenceValue">0 dB</strong></label>
+          <input id="presence" name="presence" type="range" min="-6" max="6" value="0" step="1">
+          <small>Ajuda a destacar a voz na mistura.</small>
+        </div>
+        <div class="control">
+          <label for="compression">Compressão <strong id="compressionValue">Média</strong></label>
+          <input id="compression" name="compression" type="range" min="0" max="10" value="4" step="1">
+          <small>Controla a dinâmica; valores elevados podem reduzir a naturalidade.</small>
+        </div>
+      </div>
+
+      <div class="subheading">04 / PERFIL DE SOM</div>
+      <div class="profiles">
+        <label class="profile-option">
+          <input type="radio" name="profile" value="natural" checked>
+          <span><b>Natural Pro</b><small>Equilíbrio, dinâmica e voz natural.</small></span>
+        </label>
+        <label class="profile-option">
+          <input type="radio" name="profile" value="modern">
+          <span><b>Perfect Modern</b><small>Som mais presente, firme e moderno.</small></span>
+        </label>
+      </div>
+
+      <div class="format">
+        <div><b>Formato de exportação</b><small>Escolhe como queres descarregar</small></div>
+        <div class="format-options">
+          <label><input type="radio" name="format" value="wav" checked><span>WAV <small>24-bit</small></span></label>
+          <label><input type="radio" name="format" value="mp3"><span>MP3 <small>320 kbps</small></span></label>
+        </div>
+      </div>
+
+      <div class="notice">
+        ⓘ O processamento atual inclui mistura e filtros de masterização. A correção automática de afinação e o alinhamento vocal inteligente serão disponibilizados após a integração dos respetivos motores.
+      </div>
+
+      <button id="submit" class="submit" type="submit">
+        <span>✦</span> PROCESSAR A MINHA MÚSICA <b>→</b>
+      </button>
+
+      <div id="progressWrap" class="progress-wrap hidden">
+        <div class="progress-head"><span id="progressText">A processar áudio…</span><span id="progressPct">Aguarda</span></div>
+        <div class="progress"><span></span></div>
+      </div>
+
+      <div id="result" class="result hidden"></div>
+      <div id="error" class="error hidden"></div>
+    </form>
+  </section>
+
+  <section class="bottom">
+    <div class="bottom-icon">♫</div>
+    <div>
+      <b>Feito para artistas independentes</b>
+      <p>Prepara, compara e exporta a tua música. Escuta sempre o resultado antes de publicar.</p>
+    </div>
+  </section>
+
+  <footer>LEVI MASTER AI <span>•</span> STUDIO PRO · PROCESSAMENTO REAL DE ÁUDIO</footer>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
