@@ -1,168 +1,879 @@
 
-<!doctype html>
-<html lang="pt">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#10111b">
-  <meta name="description" content="Levi Master AI Studio Pro — mistura e masterização de áudio online.">
-  <link rel="manifest" href="/static/manifest.json">
-  <link rel="stylesheet" href="/static/style.css">
-  <title>Levi Master AI — Studio Pro</title>
-</head>
-<body>
-<header class="top">
-  <a class="brand" href="/">
-    <span class="logo">LM</span>
-    <span>LEVI <b>MASTER AI</b><small>YOUR SOUND. REFINED.</small></span>
-  </a>
-  <span class="free">● STUDIO PRO</span>
-</header>
+/* =========================================
+   LEVI MASTER AI — STYLE.CSS
+   Design atualizado | Mobile + Desktop
+========================================= */
 
-<main>
-  <section class="hero">
-    <div class="eyebrow"><span></span> AI AUDIO STUDIO</div>
-    <h1>O teu som.<br><em>Pronto para brilhar.</em></h1>
-    <p>Prepara as tuas vozes, mistura a instrumental e aperfeiçoa a tua música com controlos de masterização. Compara duas versões antes de descarregar.</p>
-    <div class="meters">
-      <div><strong>24-bit</strong><small>WAV HQ</small></div>
-      <div><strong>320 kbps</strong><small>MP3</small></div>
-      <div><strong>44.1 kHz</strong><small>OUTPUT</small></div>
-    </div>
-  </section>
+:root {
+  color-scheme: dark;
+  --bg: #080b12;
+  --panel: #101622;
+  --panel-light: #151e2c;
+  --border: #263246;
+  --text: #f4f7ff;
+  --muted: #9ba9bd;
+  --accent: #40e0b0;
+  --accent-dark: #13a982;
+  --blue: #65a8ff;
+  --danger: #ff6b79;
+  --radius: 18px;
+}
 
-  <section class="studio">
-    <div class="section-title">
-      <div>
-        <span class="step">01 / CONFIGURAR</span>
-        <h2>O teu projeto de áudio</h2>
-      </div>
-      <span class="status"><i></i> ENGINE READY</span>
-    </div>
+* {
+  box-sizing: border-box;
+}
 
-    <div class="modes">
-      <button type="button" class="mode active" data-mode="mix">
-        <span>✳</span><b>Mix & Master</b><small>Instrumental + voz</small>
-      </button>
-      <button type="button" class="mode" data-mode="master">
-        <span>◉</span><b>Master Only</b><small>Música já misturada</small>
-      </button>
-    </div>
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
 
-    <form id="form">
-      <div id="mixFields" class="upload-grid">
-        <label class="drop" for="instrumental">
-          <span class="upload-icon">＋</span>
-          <b>Instrumental</b>
-          <small>WAV, MP3, FLAC, M4A, AIFF</small>
-          <span class="filename" id="instName">Escolher ficheiro</span>
-          <input id="instrumental" name="instrumental" type="file" accept="audio/*">
-        </label>
-        <label class="drop" for="vocals">
-          <span class="upload-icon">＋</span>
-          <b>Vozes / Vocais</b>
-          <small>WAV, MP3, FLAC, M4A, AIFF</small>
-          <span class="filename" id="voxName">Escolher ficheiro</span>
-          <input id="vocals" name="vocals" type="file" accept="audio/*">
-        </label>
-      </div>
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 15% 0%, #142b35 0%, transparent 38%),
+    radial-gradient(ellipse at 100% 20%, #171b38 0%, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
 
-      <div id="masterFields" class="upload-grid hidden">
-        <label class="drop single" for="track">
-          <span class="upload-icon">↑</span>
-          <b>Carrega a música</b>
-          <small>WAV, MP3, FLAC, M4A, AIFF</small>
-          <span class="filename" id="trackName">Escolher ficheiro</span>
-          <input id="track" name="track" type="file" accept="audio/*">
-        </label>
-      </div>
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
 
-      <div class="subheading">02 / MISTURA VOCAL</div>
-      <div class="controls">
-        <div class="control">
-          <label for="vocalGain">Nível dos vocais <strong id="gainValue">0 dB</strong></label>
-          <input id="vocalGain" name="vocal_gain" type="range" min="-12" max="12" value="0" step="1">
-          <small>Ajusta a voz relativamente à instrumental.</small>
-        </div>
-        <div class="control">
-          <label for="lufs">Volume final <strong id="lufsValue">−14 LUFS</strong></label>
-          <input id="lufs" name="target_lufs" type="range" min="-18" max="-9" value="-14" step="1">
-          <small>Define o alvo de loudness da masterização.</small>
-        </div>
-      </div>
+button,
+input,
+select {
+  font-size: inherit;
+}
 
-      <div class="subheading">03 / MASTERIZAÇÃO</div>
-      <div class="controls">
-        <div class="control">
-          <label for="bass">Graves <strong id="bassValue">0 dB</strong></label>
-          <input id="bass" name="bass" type="range" min="-6" max="6" value="0" step="1">
-          <small>Controla a energia das frequências baixas.</small>
-        </div>
-        <div class="control">
-          <label for="treble">Agudos <strong id="trebleValue">0 dB</strong></label>
-          <input id="treble" name="treble" type="range" min="-6" max="6" value="0" step="1">
-          <small>Ajusta o brilho geral da música.</small>
-        </div>
-        <div class="control">
-          <label for="presence">Presença <strong id="presenceValue">0 dB</strong></label>
-          <input id="presence" name="presence" type="range" min="-6" max="6" value="0" step="1">
-          <small>Ajuda a destacar a voz na mistura.</small>
-        </div>
-        <div class="control">
-          <label for="compression">Compressão <strong id="compressionValue">Média</strong></label>
-          <input id="compression" name="compression" type="range" min="0" max="10" value="4" step="1">
-          <small>Controla a dinâmica; valores elevados podem reduzir a naturalidade.</small>
-        </div>
-      </div>
+button {
+  cursor: pointer;
+}
 
-      <div class="subheading">04 / PERFIL DE SOM</div>
-      <div class="profiles">
-        <label class="profile-option">
-          <input type="radio" name="profile" value="natural" checked>
-          <span><b>Natural Pro</b><small>Equilíbrio, dinâmica e voz natural.</small></span>
-        </label>
-        <label class="profile-option">
-          <input type="radio" name="profile" value="modern">
-          <span><b>Perfect Modern</b><small>Som mais presente, firme e moderno.</small></span>
-        </label>
-      </div>
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
 
-      <div class="format">
-        <div><b>Formato de exportação</b><small>Escolhe como queres descarregar</small></div>
-        <div class="format-options">
-          <label><input type="radio" name="format" value="wav" checked><span>WAV <small>24-bit</small></span></label>
-          <label><input type="radio" name="format" value="mp3"><span>MP3 <small>320 kbps</small></span></label>
-        </div>
-      </div>
+img {
+  max-width: 100%;
+}
 
-      <div class="notice">
-        ⓘ O processamento atual inclui mistura e filtros de masterização. A correção automática de afinação e o alinhamento vocal inteligente serão disponibilizados após a integração dos respetivos motores.
-      </div>
+/* HEADER */
 
-      <button id="submit" class="submit" type="submit">
-        <span>✦</span> PROCESSAR A MINHA MÚSICA <b>→</b>
-      </button>
+.top {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 22px 22px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
 
-      <div id="progressWrap" class="progress-wrap hidden">
-        <div class="progress-head"><span id="progressText">A processar áudio…</span><span id="progressPct">Aguarda</span></div>
-        <div class="progress"><span></span></div>
-      </div>
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
 
-      <div id="result" class="result hidden"></div>
-      <div id="error" class="error hidden"></div>
-    </form>
-  </section>
+.logo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #04150f;
+  background: linear-gradient(135deg, #65f5c7, #2abf9a);
+  box-shadow: 0 0 28px #40e0b028;
+  font-size: 21px;
+  font-weight: 900;
+}
 
-  <section class="bottom">
-    <div class="bottom-icon">♫</div>
-    <div>
-      <b>Feito para artistas independentes</b>
-      <p>Prepara, compara e exporta a tua música. Escuta sempre o resultado antes de publicar.</p>
-    </div>
-  </section>
+.free {
+  padding: 6px 12px;
+  border: 1px solid #2b6b5c;
+  border-radius: 999px;
+  color: var(--accent);
+  background: #10251f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
 
-  <footer>LEVI MASTER AI <span>•</span> STUDIO PRO · PROCESSAMENTO REAL DE ÁUDIO</footer>
-</main>
-<script src="/static/app.js"></script>
-</body>
-</html>
+/* MAIN LAYOUT */
+
+.hero,
+.studio,
+.bottom,
+footer {
+  width: 100%;
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 22px;
+  padding-right: 22px;
+}
+
+.hero {
+  padding-top: 34px;
+  padding-bottom: 28px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.hero h2 {
+  max-width: 760px;
+  margin: 0 0 16px;
+  font-size: clamp(34px, 7vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -2px;
+  font-weight: 850;
+}
+
+.hero h1 span,
+.hero h2 span {
+  color: var(--accent);
+}
+
+.hero p {
+  max-width: 660px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.meters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.meters > * {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #101722c9;
+}
+
+.meters strong {
+  display: block;
+  color: var(--text);
+  font-size: 17px;
+}
+
+.meters span,
+.meters small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* STUDIO PANEL */
+
+.studio {
+  padding-top: 8px;
+  padding-bottom: 35px;
+}
+
+#form,
+form {
+  width: 100%;
+}
+
+#form {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: linear-gradient(160deg, #111925f5, #0d121cf5);
+  box-shadow: 0 25px 80px #00000035;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 26px 0 14px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.section-title:first-child {
+  margin-top: 0;
+}
+
+.section-title::before {
+  content: "";
+  width: 4px;
+  height: 20px;
+  border-radius: 5px;
+  background: var(--accent);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 750;
+}
+
+.step:first-child {
+  margin-top: 0;
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #2c7764;
+  border-radius: 10px;
+  background: #102820;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* STATUS */
+
+.status {
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #254b43;
+  border-radius: 12px;
+  background: #10231f;
+  color: #baf7e5;
+  font-size: 13px;
+}
+
+.status:empty {
+  display: none;
+}
+
+/* MODE SELECTION */
+
+.modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.mode {
+  position: relative;
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+  color: var(--text);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.mode:hover {
+  border-color: #467f76;
+  transform: translateY(-2px);
+}
+
+.mode.active,
+.mode.selected,
+.mode:focus-within {
+  border-color: var(--accent);
+  background: #112720;
+  box-shadow: inset 0 0 0 1px #40e0b025;
+}
+
+.mode h3,
+.mode h4 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.mode p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* UPLOAD AREA */
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.drop {
+  position: relative;
+  min-width: 0;
+  min-height: 145px;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1.5px dashed #35445a;
+  border-radius: 16px;
+  background: #0b111b;
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.drop:hover,
+.drop:focus-within {
+  border-color: var(--accent);
+  background: #10201d;
+}
+
+.drop input[type="file"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.drop strong {
+  color: var(--text);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.drop span,
+.drop small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.filename {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  color: var(--accent);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* TEXT AND INPUTS */
+
+.subheading {
+  margin: 18px 0 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.control {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #0c121c;
+}
+
+.control label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #dbe4f2;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.control output,
+.control .value {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.control input:not([type="range"]),
+.control select,
+.control textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid #344156;
+  border-radius: 10px;
+  outline: none;
+  background: #101827;
+  color: var(--text);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+/* PROFILES */
+
+.profiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profile-option {
+  display: block;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #0c121c;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.profile-option:hover {
+  border-color: #467f76;
+}
+
+.profile-option:has(input:checked) {
+  border-color: var(--accent);
+  background: #112720;
+}
+
+.profile-option input {
+  margin-right: 7px;
+}
+
+.profile-option strong {
+  display: block;
+  margin: 5px 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.profile-option p,
+.profile-option small {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* OUTPUT FORMAT */
+
+.format {
+  margin-top: 18px;
+}
+
+.format-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.format-options label,
+.format-options button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: #0c121c;
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.format-options label:has(input:checked) {
+  border-color: var(--accent);
+  background: #112720;
+}
+
+/* NOTICE */
+
+.notice {
+  margin: 18px 0;
+  padding: 14px;
+  border: 1px solid #344258;
+  border-radius: 12px;
+  background: #101827;
+  color: #bac8dc;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.notice strong {
+  color: var(--text);
+}
+
+/* PRIMARY BUTTON */
+
+.submit {
+  width: 100%;
+  min-height: 54px;
+  margin-top: 20px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #58f0c2, #22bd96);
+  color: #041710;
+  font-size: 15px;
+  font-weight: 850;
+  box-shadow: 0 8px 26px #27c59b25;
+  transition: filter 0.2s, transform 0.2s;
+}
+
+.submit:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+.submit:active {
+  transform: translateY(0);
+}
+
+.submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+/* PROGRESS */
+
+.progress-wrap {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #0b111b;
+}
+
+.progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+#progressText {
+  color: var(--muted);
+}
+
+#progressPct {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.progress {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: #263246;
+}
+
+.progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #23bd96, #72f5cc);
+  transition: width 0.3s ease;
+}
+
+/* RESULT AND ERROR */
+
+.result {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #286c56;
+  border-radius: 15px;
+  background: #10251d;
+  overflow-wrap: anywhere;
+}
+
+.result h3 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+.result a,
+.result button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  padding: 11px 15px;
+  border: 1px solid #2b8068;
+  border-radius: 10px;
+  background: #143b2e;
+  color: #c5ffed;
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #743845;
+  border-radius: 12px;
+  background: #2a131a;
+  color: #ffb4bd;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* BOTTOM FEATURES */
+
+.bottom {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding-top: 8px;
+  padding-bottom: 30px;
+}
+
+.bottom > * {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: #101622b8;
+}
+
+.bottom-icon {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 23px;
+}
+
+.bottom strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.bottom p,
+.bottom span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* FOOTER */
+
+footer {
+  padding-top: 20px;
+  padding-bottom: 30px;
+  border-top: 1px solid #202a3a;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+footer p {
+  margin: 5px 0;
+}
+
+/* ACCESSIBILITY */
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: #40e0b050;
+  color: white;
+}
+
+/* TABLET */
+
+@media (min-width: 700px) {
+  .hero {
+    padding-top: 48px;
+    padding-bottom: 34px;
+  }
+
+  #form {
+    padding: 30px;
+  }
+
+  .upload-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* MOBILE */
+
+@media (max-width: 520px) {
+  body {
+    font-size: 14px;
+  }
+
+  .top {
+    padding: 16px 15px 10px;
+  }
+
+  .brand {
+    gap: 9px;
+    font-size: 15px;
+  }
+
+  .logo {
+    width: 39px;
+    height: 39px;
+    flex-basis: 39px;
+    border-radius: 12px;
+  }
+
+  .free {
+    padding: 5px 8px;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+
+  .hero,
+  .studio,
+  .bottom,
+  footer {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .hero {
+    padding-top: 26px;
+    padding-bottom: 22px;
+  }
+
+  .hero h1,
+  .hero h2 {
+    font-size: clamp(32px, 9vw, 43px);
+    letter-spacing: -1.4px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .meters {
+    gap: 8px;
+  }
+
+  .meters > * {
+    padding: 10px;
+  }
+
+  .meters strong {
+    font-size: 14px;
+  }
+
+  .meters span,
+  .meters small {
+    font-size: 10px;
+  }
+
+  .studio {
+    padding-bottom: 25px;
+  }
+
+  #form {
+    padding: 16px;
+    border-radius: 19px;
+  }
+
+  .section-title {
+    font-size: 15px;
+  }
+
+  .upload-grid,
+  .controls,
+  .modes,
+  .profiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .drop {
+    min-height: 125px;
+  }
+
+  .bottom {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .bottom > * {
+    padding: 14px;
+  }
+
+  .submit {
+    font-size: 14px;
+  }
+}
+
+/* REDUCE ANIMATIONS WHEN REQUESTED */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
