@@ -1,2 +1,168 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-:root{color-scheme:dark;--bg:#0b0c13;--panel:#12141f;--line:#292c3b;--muted:#999eb5;--white:#f7f7fb;--purple:#a58bff;--cyan:#77f0d0}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 70% 0%,#211a3d 0,transparent 40%),var(--bg);color:var(--white);font-family:'DM Sans',sans-serif}.top{height:78px;border-bottom:1px solid #242536;display:flex;align-items:center;justify-content:space-between;padding:0 max(calc((100vw - 1080px)/2),22px)}.brand{display:flex;gap:11px;align-items:center;color:inherit;text-decoration:none;font:700 15px 'Space Grotesk';letter-spacing:1px}.brand b{color:var(--purple)}.brand small{display:block;color:#8589a1;font:500 9px 'DM Sans';letter-spacing:2px;margin-top:3px}.logo{width:39px;height:39px;border:1px solid #8e77e6;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#30244e,#151624);color:#c5b7ff;font-size:13px}.free{font-size:10px;letter-spacing:1px;color:var(--cyan);border:1px solid #285b52;padding:8px 11px;border-radius:20px;background:#10241f}main{max-width:940px;margin:auto;padding:0 22px}.hero{padding:64px 0 43px}.eyebrow,.step{font-size:10px;letter-spacing:2px;color:var(--purple);font-weight:700}.eyebrow span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-right:8px;box-shadow:0 0 12px var(--cyan)}h1{font:600 clamp(38px,7vw,64px)/1.05 'Space Grotesk';letter-spacing:-2px;margin:18px 0}h1 em{font-style:normal;color:var(--purple)}.hero p{max-width:600px;color:#b1b4c7;line-height:1.7;font-size:14px}.meters{display:flex;gap:12px;margin-top:27px}.meters div{border-left:2px solid #6550a6;padding:2px 18px}.meters strong,.meters small{display:block}.meters strong{font:600 16px 'Space Grotesk'}.meters small{font-size:9px;letter-spacing:1.5px;color:var(--muted);margin-top:5px}.studio{border:1px solid var(--line);border-radius:20px;background:linear-gradient(140deg,#151623,#10111a);padding:27px;box-shadow:0 20px 80px #0003}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px}.section-title h2{font:600 24px 'Space Grotesk';margin:8px 0 22px}.status{font-size:9px;color:#a8aec2;letter-spacing:1px}.status i{display:inline-block;background:var(--cyan);width:6px;height:6px;border-radius:50%;margin-right:6px}.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}.mode{font:inherit;text-align:left;border:1px solid var(--line);background:#11121d;border-radius:12px;padding:14px;color:var(--white);cursor:pointer}.mode.active{border-color:#8973dc;background:#201b32;box-shadow:inset 0 0 0 1px #8973dc33}.mode>span{float:right;color:var(--purple);font-size:18px}.mode b,.mode small{display:block}.mode b{font-size:13px}.mode small{font-size:11px;color:var(--muted);margin-top:5px}.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.drop{min-height:153px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px dashed #45465c;border-radius:13px;background:#0d0e17;cursor:pointer;padding:17px;transition:.2s}.drop:hover{border-color:var(--purple);background:#171526}.drop input{display:none}.upload-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#27213b;color:var(--purple);font-size:24px;margin-bottom:10px}.drop b{font-size:13px}.drop small{font-size:10px;color:var(--muted);margin-top:5px}.filename{max-width:95%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cyan);font-size:10px;margin-top:12px}.single{grid-column:1/-1;min-height:130px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin:26px 0}.control label{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600}.control label strong{color:var(--purple);white-space:nowrap}.control input[type=range]{width:100%;accent-color:var(--purple);margin:18px 0 8px}.control>small,.format small{display:block;color:var(--muted);font-size:10px;line-height:1.5}.format{border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:space-between;align-items:center;gap:12px}.format b{font-size:12px}.format-options{display:flex;gap:8px}.format-options input{position:absolute;opacity:0}.format-options label span{display:block;border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:12px;cursor:pointer}.format-options label small{font-size:10px;display:inline;color:var(--muted);margin-left:5px}.format-options input:checked+span{border-color:var(--purple);background:#28213f}.notice{margin:20px 0;padding:12px;border-radius:9px;background:#1d1b2a;color:#b7b4cd;font-size:10px;line-height:1.6}.submit{width:100%;border:0;border-radius:10px;padding:16px;background:linear-gradient(100deg,#9b83ff,#7761df);color:white;font:700 11px 'DM Sans';letter-spacing:1px;cursor:pointer;display:flex;justify-content:center;align-items:center;gap:10px}.submit b{margin-left:auto;font-size:18px}.submit span{font-size:17px}.submit:disabled{opacity:.55;cursor:wait}.progress-wrap{margin-top:18px}.progress-head{display:flex;justify-content:space-between;color:#bfc1d3;font-size:11px;margin-bottom:9px}.progress{height:5px;border-radius:8px;background:#29283a;overflow:hidden}.progress span{display:block;height:100%;width:35%;background:var(--cyan);animation:loading 1.2s ease-in-out infinite alternate}.result,.error{margin-top:14px;border-radius:10px;padding:14px;font-size:12px;line-height:1.6}.result{background:#12241f;border:1px solid #2b6254;color:#baf9e7}.error{background:#2b171d;border:1px solid #693441;color:#ffb7c3}.result a{color:#a9ffe6;font-weight:700}.hidden{display:none!important}.bottom{display:flex;gap:16px;align-items:center;padding:30px 6px}.bottom-icon{font-size:23px;color:var(--purple);width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--line);border-radius:14px}.bottom b{font-size:13px}.bottom p{font-size:11px;color:var(--muted);margin:6px 0 0;line-height:1.6}footer{border-top:1px solid #222331;padding:20px 0 28px;text-align:center;color:#6f738a;font-size:9px;letter-spacing:1.4px}footer span{color:var(--purple);padding:0 5px}@keyframes loading{from{width:15%}to{width:90%}}@media(max-width:600px){.top{height:68px;padding:0 17px}.free{font-size:8px;padding:7px}.hero{padding:45px 0 30px}.hero p{font-size:13px}.meters{gap:3px}.meters div{padding:2px 10px}.meters strong{font-size:14px}.studio{padding:18px 14px;border-radius:15px}.section-title h2{font-size:21px}.status{font-size:8px}.upload-grid,.controls{grid-template-columns:1fr;gap:11px}.drop{min-height:135px}.controls{margin:22px 0}.format{align-items:flex-start;flex-direction:column}.format-options{width:100%}.format-options label{flex:1}.format-options label span{text-align:center}.submit{font-size:10px;letter-spacing:.4px}.bottom{padding:24px 2px}}
+
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#10111b">
+  <meta name="description" content="Levi Master AI Studio Pro — mistura e masterização de áudio online.">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Levi Master AI — Studio Pro</title>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">
+    <span class="logo">LM</span>
+    <span>LEVI <b>MASTER AI</b><small>YOUR SOUND. REFINED.</small></span>
+  </a>
+  <span class="free">● STUDIO PRO</span>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="eyebrow"><span></span> AI AUDIO STUDIO</div>
+    <h1>O teu som.<br><em>Pronto para brilhar.</em></h1>
+    <p>Prepara as tuas vozes, mistura a instrumental e aperfeiçoa a tua música com controlos de masterização. Compara duas versões antes de descarregar.</p>
+    <div class="meters">
+      <div><strong>24-bit</strong><small>WAV HQ</small></div>
+      <div><strong>320 kbps</strong><small>MP3</small></div>
+      <div><strong>44.1 kHz</strong><small>OUTPUT</small></div>
+    </div>
+  </section>
+
+  <section class="studio">
+    <div class="section-title">
+      <div>
+        <span class="step">01 / CONFIGURAR</span>
+        <h2>O teu projeto de áudio</h2>
+      </div>
+      <span class="status"><i></i> ENGINE READY</span>
+    </div>
+
+    <div class="modes">
+      <button type="button" class="mode active" data-mode="mix">
+        <span>✳</span><b>Mix & Master</b><small>Instrumental + voz</small>
+      </button>
+      <button type="button" class="mode" data-mode="master">
+        <span>◉</span><b>Master Only</b><small>Música já misturada</small>
+      </button>
+    </div>
+
+    <form id="form">
+      <div id="mixFields" class="upload-grid">
+        <label class="drop" for="instrumental">
+          <span class="upload-icon">＋</span>
+          <b>Instrumental</b>
+          <small>WAV, MP3, FLAC, M4A, AIFF</small>
+          <span class="filename" id="instName">Escolher ficheiro</span>
+          <input id="instrumental" name="instrumental" type="file" accept="audio/*">
+        </label>
+        <label class="drop" for="vocals">
+          <span class="upload-icon">＋</span>
+          <b>Vozes / Vocais</b>
+          <small>WAV, MP3, FLAC, M4A, AIFF</small>
+          <span class="filename" id="voxName">Escolher ficheiro</span>
+          <input id="vocals" name="vocals" type="file" accept="audio/*">
+        </label>
+      </div>
+
+      <div id="masterFields" class="upload-grid hidden">
+        <label class="drop single" for="track">
+          <span class="upload-icon">↑</span>
+          <b>Carrega a música</b>
+          <small>WAV, MP3, FLAC, M4A, AIFF</small>
+          <span class="filename" id="trackName">Escolher ficheiro</span>
+          <input id="track" name="track" type="file" accept="audio/*">
+        </label>
+      </div>
+
+      <div class="subheading">02 / MISTURA VOCAL</div>
+      <div class="controls">
+        <div class="control">
+          <label for="vocalGain">Nível dos vocais <strong id="gainValue">0 dB</strong></label>
+          <input id="vocalGain" name="vocal_gain" type="range" min="-12" max="12" value="0" step="1">
+          <small>Ajusta a voz relativamente à instrumental.</small>
+        </div>
+        <div class="control">
+          <label for="lufs">Volume final <strong id="lufsValue">−14 LUFS</strong></label>
+          <input id="lufs" name="target_lufs" type="range" min="-18" max="-9" value="-14" step="1">
+          <small>Define o alvo de loudness da masterização.</small>
+        </div>
+      </div>
+
+      <div class="subheading">03 / MASTERIZAÇÃO</div>
+      <div class="controls">
+        <div class="control">
+          <label for="bass">Graves <strong id="bassValue">0 dB</strong></label>
+          <input id="bass" name="bass" type="range" min="-6" max="6" value="0" step="1">
+          <small>Controla a energia das frequências baixas.</small>
+        </div>
+        <div class="control">
+          <label for="treble">Agudos <strong id="trebleValue">0 dB</strong></label>
+          <input id="treble" name="treble" type="range" min="-6" max="6" value="0" step="1">
+          <small>Ajusta o brilho geral da música.</small>
+        </div>
+        <div class="control">
+          <label for="presence">Presença <strong id="presenceValue">0 dB</strong></label>
+          <input id="presence" name="presence" type="range" min="-6" max="6" value="0" step="1">
+          <small>Ajuda a destacar a voz na mistura.</small>
+        </div>
+        <div class="control">
+          <label for="compression">Compressão <strong id="compressionValue">Média</strong></label>
+          <input id="compression" name="compression" type="range" min="0" max="10" value="4" step="1">
+          <small>Controla a dinâmica; valores elevados podem reduzir a naturalidade.</small>
+        </div>
+      </div>
+
+      <div class="subheading">04 / PERFIL DE SOM</div>
+      <div class="profiles">
+        <label class="profile-option">
+          <input type="radio" name="profile" value="natural" checked>
+          <span><b>Natural Pro</b><small>Equilíbrio, dinâmica e voz natural.</small></span>
+        </label>
+        <label class="profile-option">
+          <input type="radio" name="profile" value="modern">
+          <span><b>Perfect Modern</b><small>Som mais presente, firme e moderno.</small></span>
+        </label>
+      </div>
+
+      <div class="format">
+        <div><b>Formato de exportação</b><small>Escolhe como queres descarregar</small></div>
+        <div class="format-options">
+          <label><input type="radio" name="format" value="wav" checked><span>WAV <small>24-bit</small></span></label>
+          <label><input type="radio" name="format" value="mp3"><span>MP3 <small>320 kbps</small></span></label>
+        </div>
+      </div>
+
+      <div class="notice">
+        ⓘ O processamento atual inclui mistura e filtros de masterização. A correção automática de afinação e o alinhamento vocal inteligente serão disponibilizados após a integração dos respetivos motores.
+      </div>
+
+      <button id="submit" class="submit" type="submit">
+        <span>✦</span> PROCESSAR A MINHA MÚSICA <b>→</b>
+      </button>
+
+      <div id="progressWrap" class="progress-wrap hidden">
+        <div class="progress-head"><span id="progressText">A processar áudio…</span><span id="progressPct">Aguarda</span></div>
+        <div class="progress"><span></span></div>
+      </div>
+
+      <div id="result" class="result hidden"></div>
+      <div id="error" class="error hidden"></div>
+    </form>
+  </section>
+
+  <section class="bottom">
+    <div class="bottom-icon">♫</div>
+    <div>
+      <b>Feito para artistas independentes</b>
+      <p>Prepara, compara e exporta a tua música. Escuta sempre o resultado antes de publicar.</p>
+    </div>
+  </section>
+
+  <footer>LEVI MASTER AI <span>•</span> STUDIO PRO · PROCESSAMENTO REAL DE ÁUDIO</footer>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
