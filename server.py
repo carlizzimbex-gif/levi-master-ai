@@ -5,10 +5,16 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 BASE = Path(__file__).parent
+
+STATIC_DIR = BASE / "static"
+if not STATIC_DIR.is_dir():
+    STATIC_DIR = BASE / "Static"
+
 OUT = BASE / "outputs"
 OUT.mkdir(exist_ok=True)
+
 app = FastAPI(title="Levi Master AI", version="0.1.0")
-app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def require_ffmpeg():
     if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
