@@ -1,241 +1,270 @@
+
 import os
-import shutil
-import subprocess
-import tempfile
 import uuid
+import shutil
+import asyncio
+import subprocess
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, UploadFile, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 
-BASE = Path(__file__).resolve().parent
+app = FastAPI(title="Levi Master AI")
 
-# Aceita os dois nomes de pasta, respeitando maiúsculas/minúsculas.
-if (BASE / "static").is_dir():
-    STATIC_DIR = BASE / "static"
-elif (BASE / "Static").is_dir():
-    STATIC_DIR = BASE / "Static"
-else:
-    raise RuntimeError(
-        "Pasta de ficheiros estáticos não encontrada. "
-        "Cria uma pasta chamada static com index.html, app.js, "
-        "style.css, manifest.json e sw.js."
-    )
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+if not STATIC_DIR.exists():
+    STATIC_DIR = BASE_DIR / "Static"
 
-OUT = BASE / "outputs"
-OUT.mkdir(exist_ok=True)
+WORK_DIR = BASE_DIR / "work"
+OUT_DIR = BASE_DIR / "output"
+WORK_DIR.mkdir(exist_ok=True)
+OUT_DIR.mkdir(exist_ok=True)
 
-app = FastAPI(title="Levi Master AI", version="0.1.1")
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+ALLOWED_EXTENSIONS = {
+    ".wav", ".mp3", ".m4a", ".aac", ".flac", ".ogg", ".aiff", ".aif"
+}
+
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
-def require_ffmpeg():
-    if not shutil.which("ffmpeg") or not shutil.which("ffprobe"):
+@app.get("/", response_class=HTMLResponse)
+async def home():
+    index_file = STATIC_DIR / "index.html"
+    if not index_file.exists():
+        raise HTTPException(status_code=500, detail="Ficheiro index.html não encontrado.")
+    return index_file.read_text(encoding="utf-8")
+
+
+@app.get("/api/health")
+async def health():
+    ffmpeg = shutil.which("ffmpeg")
+    return {
+        "status": "ok",
+        "ffmpeg_available": bool(ffmpeg),
+        "service": "Levi Master AI"
+    }
+
+
+async def save_upload(upload: UploadFile, destination: Path):
+    suffix = Path(upload.filename or "").suffix.lower()
+    if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(
-            status_code=500,
-            detail="FFmpeg/ffprobe não encontrados no servidor."
+            status_code=400,
+            detail=f"Formato não suportado: {suffix or 'desconhecido'}."
         )
 
-
-def run(cmd):
+    total = 0
     try:
-        p = subprocess.run(
-            cmd,
+        with destination.open("wb") as output:
+            while True:
+                chunk = await upload.read(1024 * 1024)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_UPLOAD_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="O ficheiro excede o limite de 200 MB."
+                    )
+                output.write(chunk)
+    finally:
+        await upload.close()
+
+    if total == 0:
+        destination.unlink(missing_ok=True)
+        raise HTTPException(status_code=400, detail="O ficheiro enviado está vazio.")
+
+    return destination
+
+
+def run_ffmpeg(command):
+    try:
+        result = subprocess.run(
+            command,
             capture_output=True,
             text=True,
             timeout=600
         )
     except subprocess.TimeoutExpired:
         raise HTTPException(
-            status_code=408,
-            detail="O processamento demorou demasiado tempo. Tenta um áudio menor."
+            status_code=504,
+            detail="O processamento demorou demasiado tempo. Tenta um áudio mais curto."
         )
 
-    if p.returncode != 0:
-        detail = (p.stderr or "Erro desconhecido no FFmpeg.")[-1200:]
-        raise HTTPException(
-            status_code=422,
-            detail="Não foi possível processar o áudio: " + detail
-        )
+    if result.returncode != 0:
+        detail = (result.stderr or "Erro desconhecido do FFmpeg")[-2500:]
+        raise HTTPException(status_code=500, detail=f"Erro ao processar áudio: {detail}")
+
+    return result
 
 
-def save_upload(upload: UploadFile, target: Path):
-    if not upload or not upload.filename:
-        raise HTTPException(status_code=400, detail="Ficheiro em falta.")
+def number_value(value, name, minimum, maximum):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail=f"Valor inválido para {name}.")
 
-    allowed = {
-        ".wav", ".mp3", ".flac", ".m4a",
-        ".aac", ".ogg", ".aiff", ".aif"
-    }
-
-    if Path(upload.filename).suffix.lower() not in allowed:
+    if not minimum <= number <= maximum:
         raise HTTPException(
             status_code=400,
-            detail="Formato não suportado. Usa WAV, MP3, FLAC, M4A, AAC, OGG ou AIFF."
+            detail=f"{name} deve estar entre {minimum} e {maximum}."
         )
 
-    data = upload.file.read()
+    return number
 
-    if not data:
-        raise HTTPException(status_code=400, detail="O ficheiro enviado está vazio.")
 
-    if len(data) > 200 * 1024 * 1024:
-        raise HTTPException(
-            status_code=413,
-            detail="O ficheiro excede o limite de 200 MB."
+def build_filter_chain(mode, profile, target_lufs, bass, treble, presence, compression, vocal_gain):
+    filters = ["highpass=f=25"]
+
+    # EQ: valores limitados para evitar ajustes extremos.
+    if bass != 0:
+        filters.append(f"equalizer=f=100:t=q:w=1:g={bass:.2f}")
+    if presence != 0:
+        filters.append(f"equalizer=f=3000:t=q:w=1:g={presence:.2f}")
+    if treble != 0:
+        filters.append(f"equalizer=f=10000:t=q:w=1:g={treble:.2f}")
+
+    if profile == "natural":
+        ratio = 1.8 + compression * 0.22
+        attack = 20
+        release = 180
+        peak = -1.0
+    else:
+        ratio = 2.5 + compression * 0.35
+        attack = 8
+        release = 100
+        peak = -1.0
+        # Presença ligeiramente maior no perfil moderno.
+        filters.append("equalizer=f=5000:t=q:w=1:g=0.5")
+
+    if compression > 0:
+        threshold = -18 - compression * 0.6
+        filters.append(
+            f"acompressor=threshold={threshold:.2f}dB:"
+            f"ratio={ratio:.2f}:attack={attack}:release={release}:"
+            "makeup=1"
         )
 
-    target.write_bytes(data)
-
-
-@app.get("/", response_class=HTMLResponse)
-def home():
-    index_file = STATIC_DIR / "index.html"
-
-    if not index_file.is_file():
-        raise HTTPException(
-            status_code=500,
-            detail="Não foi encontrado index.html na pasta de ficheiros estáticos."
-        )
-
-    return index_file.read_text(encoding="utf-8")
-
-
-@app.get("/api/health")
-def health():
-    return {
-        "ok": True,
-        "ffmpeg_available": bool(shutil.which("ffmpeg")),
-        "ffprobe_available": bool(shutil.which("ffprobe")),
-        "static_directory": STATIC_DIR.name
-    }
+    filters.append(
+        f"loudnorm=I={target_lufs:.1f}:TP={peak:.1f}:LRA=11"
+    )
+    filters.append("alimiter=limit=0.891")
+    return ",".join(filters)
 
 
 @app.post("/api/process")
 async def process_audio(
     mode: str = Form(...),
     output_format: str = Form("wav"),
-    target_lufs: float = Form(-14.0),
-    vocal_gain: float = Form(0.0),
-    track: UploadFile = File(None),
+    target_lufs: str = Form("-14"),
+    vocal_gain: str = Form("0"),
+    bass: str = Form("0"),
+    treble: str = Form("0"),
+    presence: str = Form("0"),
+    compression: str = Form("4"),
+    profile: str = Form("natural"),
     instrumental: UploadFile = File(None),
     vocals: UploadFile = File(None),
+    track: UploadFile = File(None)
 ):
-    require_ffmpeg()
+    if not shutil.which("ffmpeg"):
+        raise HTTPException(status_code=500, detail="FFmpeg não está disponível no servidor.")
 
-    if output_format not in ("wav", "mp3"):
-        raise HTTPException(
-            status_code=400,
-            detail="Formato de saída inválido."
-        )
+    if mode not in {"mix", "master"}:
+        raise HTTPException(status_code=400, detail="Modo inválido.")
 
-    if not (-18 <= target_lufs <= -9):
-        raise HTTPException(
-            status_code=400,
-            detail="O alvo de loudness deve estar entre -18 e -9 LUFS."
-        )
+    if output_format not in {"wav", "mp3"}:
+        raise HTTPException(status_code=400, detail="Formato de saída inválido.")
 
-    if not (-12 <= vocal_gain <= 12):
-        raise HTTPException(
-            status_code=400,
-            detail="O ganho vocal deve estar entre -12 e +12 dB."
-        )
+    if profile not in {"natural", "modern"}:
+        raise HTTPException(status_code=400, detail="Perfil de processamento inválido.")
 
-    job = uuid.uuid4().hex
-    work = Path(tempfile.mkdtemp(prefix="levimaster_"))
+    lufs = number_value(target_lufs, "LUFS", -18, -9)
+    vocal_gain_db = number_value(vocal_gain, "Ganho vocal", -12, 12)
+    bass_db = number_value(bass, "Graves", -6, 6)
+    treble_db = number_value(treble, "Agudos", -6, 6)
+    presence_db = number_value(presence, "Presença", -6, 6)
+    compression_amount = number_value(compression, "Compressão", 0, 10)
+
+    job_id = uuid.uuid4().hex
+    job_dir = WORK_DIR / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = OUT_DIR / f"levi_master_{job_id}.{output_format}"
 
     try:
-        mixed = work / "mix.wav"
+        if mode == "mix":
+            if instrumental is None or vocals is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Para misturar, envia o instrumental e a voz."
+                )
 
-        if mode == "master":
-            src = work / "source"
-            save_upload(track, src)
-
-            run([
-                "ffmpeg", "-y",
-                "-i", str(src),
-                "-vn",
-                "-ac", "2",
-                "-ar", "44100",
-                "-c:a", "pcm_f32le",
-                str(mixed)
-            ])
-
-        elif mode == "mix":
-            inst = work / "instrumental"
-            vox = work / "vocals"
-
-            save_upload(instrumental, inst)
-            save_upload(vocals, vox)
-
-            filt = (
-                "[0:a]"
-                "aformat=sample_rates=44100:channel_layouts=stereo[inst];"
-                f"[1:a]volume={vocal_gain}dB,"
-                "highpass=f=70,"
-                "aformat=sample_rates=44100:channel_layouts=stereo[vox];"
-                "[inst][vox]"
-                "amix=inputs=2:duration=longest:dropout_transition=2[m]"
+            instrumental_path = await save_upload(
+                instrumental, job_dir / f"instrumental{Path(instrumental.filename or '').suffix.lower()}"
+            )
+            vocal_path = await save_upload(
+                vocals, job_dir / f"vocals{Path(vocals.filename or '').suffix.lower()}"
             )
 
-            run([
-                "ffmpeg", "-y",
-                "-i", str(inst),
-                "-i", str(vox),
-                "-filter_complex", filt,
-                "-map", "[m]",
-                "-c:a", "pcm_f32le",
-                str(mixed)
-            ])
+            filter_chain = build_filter_chain(
+                mode, profile, lufs, bass_db, treble_db,
+                presence_db, compression_amount, vocal_gain_db
+            )
 
+            command = [
+                "ffmpeg", "-y",
+                "-i", str(instrumental_path),
+                "-i", str(vocal_path),
+                "-filter_complex",
+                (
+                    f"[0:a]volume=1.0,highpass=f=25[inst];"
+                    f"[1:a]volume={vocal_gain_db:.2f}dB,highpass=f=70[voc];"
+                    f"[inst][voc]amix=inputs=2:duration=longest:dropout_transition=2,"
+                    f"{filter_chain}[out]"
+                ),
+                "-map", "[out]",
+            ]
         else:
-            raise HTTPException(
-                status_code=400,
-                detail="Modo de processamento inválido."
+            if track is None:
+                raise HTTPException(status_code=400, detail="Envia um áudio para masterizar.")
+
+            track_path = await save_upload(
+                track, job_dir / f"track{Path(track.filename or '').suffix.lower()}"
             )
 
-        output = OUT / f"levi_master_{job}.{output_format}"
+            filter_chain = build_filter_chain(
+                mode, profile, lufs, bass_db, treble_db,
+                presence_db, compression_amount, vocal_gain_db
+            )
 
-        chain = (
-            "highpass=f=25,"
-            "equalizer=f=250:t=q:w=1:g=-0.8,"
-            "equalizer=f=3500:t=q:w=1:g=0.7,"
-            f"loudnorm=I={target_lufs}:TP=-1.0:LRA=11,"
-            "alimiter=limit=0.891"
-        )
+            command = [
+                "ffmpeg", "-y",
+                "-i", str(track_path),
+                "-af", filter_chain,
+            ]
 
         if output_format == "wav":
-            run([
-                "ffmpeg", "-y",
-                "-i", str(mixed),
-                "-af", chain,
-                "-ar", "44100",
-                "-ac", "2",
-                "-c:a", "pcm_s24le",
-                str(output)
-            ])
-            media = "audio/wav"
-
+            command += ["-c:a", "pcm_s24le"]
         else:
-            run([
-                "ffmpeg", "-y",
-                "-i", str(mixed),
-                "-af", chain,
-                "-ar", "44100",
-                "-ac", "2",
-                "-c:a", "libmp3lame",
-                "-b:a", "320k",
-                str(output)
-            ])
-            media = "audio/mpeg"
+            command += ["-c:a", "libmp3lame", "-b:a", "320k"]
+
+        command.append(str(output_path))
+
+        await asyncio.to_thread(run_ffmpeg, command)
+
+        if not output_path.exists() or output_path.stat().st_size == 0:
+            raise HTTPException(status_code=500, detail="O servidor não gerou o áudio final.")
 
         return FileResponse(
-            path=output,
-            media_type=media,
-            filename=f"Levi_Master_AI_{job}.{output_format}",
-            background=None
+            path=str(output_path),
+            media_type="audio/wav" if output_format == "wav" else "audio/mpeg",
+            filename=f"levi-master-{profile}.{output_format}"
         )
 
     finally:
-        shutil.rmtree(work, ignore_errors=True)
+        shutil.rmtree(job_dir, ignore_errors=True)
