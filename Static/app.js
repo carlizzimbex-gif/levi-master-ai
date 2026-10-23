@@ -16,6 +16,7 @@ let isProcessing = false;
 
 function setVisible(element, visible) {
   if (!element) return;
+
   element.classList.toggle("hidden", !visible);
   element.hidden = !visible;
 }
@@ -40,6 +41,7 @@ function selectedRadio(name, fallback) {
   const selected = document.querySelector(
     `input[name="${name}"]:checked`
   );
+
   return selected ? selected.value : fallback;
 }
 
@@ -48,6 +50,7 @@ function updateMode(mode) {
 
   modeButtons.forEach((button) => {
     const active = button.dataset.mode === currentMode;
+
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
@@ -58,9 +61,11 @@ function updateMode(mode) {
   if (instrumentalInput) {
     instrumentalInput.required = currentMode === "mix";
   }
+
   if (vocalsInput) {
     vocalsInput.required = currentMode === "mix";
   }
+
   if (trackInput) {
     trackInput.required = currentMode === "master";
   }
@@ -75,20 +80,25 @@ function updateMode(mode) {
 
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
-    if (!isProcessing) updateMode(button.dataset.mode);
+    if (!isProcessing) {
+      updateMode(button.dataset.mode);
+    }
   });
 });
 
 function connectRange(inputId, outputId, suffix = "") {
   const input = $(inputId);
   const output = $(outputId);
+
   if (!input || !output) return;
 
   const update = () => {
     let value = input.value;
+
     if (inputId === "lufs" && Number(value) < 0) {
       value = "−" + Math.abs(Number(value));
     }
+
     output.textContent = `${value}${suffix}`;
   };
 
@@ -108,6 +118,7 @@ const compressionOutput = $("compressionValue");
 if (compressionInput && compressionOutput) {
   const updateCompression = () => {
     const value = Number(compressionInput.value);
+
     const label =
       value <= 2 ? "Leve" :
       value <= 5 ? "Média" :
@@ -139,6 +150,7 @@ function validateFiles() {
     if (!instrumentalInput?.files?.[0]) {
       throw new Error("Seleciona o ficheiro instrumental.");
     }
+
     if (!vocalsInput?.files?.[0]) {
       throw new Error("Seleciona o ficheiro dos vocais.");
     }
@@ -150,6 +162,21 @@ function validateFiles() {
 function makeFormData(profile) {
   const data = new FormData();
 
+  const style = selectedRadio("style", "natural");
+  const allowedStyles = [
+    "natural",
+    "trap",
+    "rap",
+    "drill",
+    "rnb",
+    "afrobeat",
+    "pop"
+  ];
+
+  if (!allowedStyles.includes(style)) {
+    throw new Error("Seleciona um estilo musical válido.");
+  }
+
   data.append("mode", currentMode);
   data.append("output_format", selectedRadio("format", "wav"));
   data.append("target_lufs", $("lufs").value);
@@ -159,6 +186,9 @@ function makeFormData(profile) {
   data.append("presence", $("presence").value);
   data.append("compression", $("compression").value);
   data.append("profile", profile);
+
+  // Envia o estilo musical selecionado ao backend.
+  data.append("style", style);
 
   if (currentMode === "mix") {
     data.append("instrumental", instrumentalInput.files[0]);
@@ -178,9 +208,32 @@ function setProgress(percent, message) {
 
   setVisible(wrap, true);
 
-  if (text) text.textContent = message;
-  if (pct) pct.textContent = `${Math.round(percent)}%`;
-  if (bar) bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+  if (text) {
+    text.textContent = message;
+  }
+
+  if (pct) {
+    pct.textContent = `${Math.round(percent)}%`;
+  }
+
+  if (bar) {
+    bar.style.width =
+      `${Math.max(0, Math.min(100, percent))}%`;
+  }
+}
+
+function getStyleName(style) {
+  const names = {
+    natural: "Natural",
+    trap: "Trap",
+    rap: "Rap / Hip-Hop",
+    drill: "Drill",
+    rnb: "R&B",
+    afrobeat: "Afrobeat",
+    pop: "Pop"
+  };
+
+  return names[style] || "Natural";
 }
 
 function createVersionCard(version) {
@@ -206,6 +259,7 @@ function createVersionCard(version) {
   download.textContent = "Descarregar esta versão";
 
   card.append(heading, description, audio, download);
+
   return card;
 }
 
@@ -234,14 +288,17 @@ function showVersions(versions) {
 }
 
 async function processVersion(profile, index) {
-  const names = {
+  const profileNames = {
     natural: "Natural Pro",
     modern: "Perfect Modern"
   };
 
+  const style = selectedRadio("style", "natural");
+  const styleName = getStyleName(style);
+
   setProgress(
     index === 1 ? 10 : 55,
-    `A processar ${names[profile]}...`
+    `A processar ${profileNames[profile]} · ${styleName}...`
   );
 
   const response = await fetch("/api/process", {
@@ -250,14 +307,17 @@ async function processVersion(profile, index) {
   });
 
   if (!response.ok) {
-    let message = `O servidor respondeu com o erro ${response.status}.`;
+    let message =
+      `O servidor respondeu com o erro ${response.status}.`;
 
     try {
       const body = await response.json();
+
       if (body.detail) {
-        message = typeof body.detail === "string"
-          ? body.detail
-          : JSON.stringify(body.detail);
+        message =
+          typeof body.detail === "string"
+            ? body.detail
+            : JSON.stringify(body.detail);
       }
     } catch (_) {
       // Mantém a mensagem de erro padrão.
@@ -266,10 +326,13 @@ async function processVersion(profile, index) {
     throw new Error(message);
   }
 
-  const contentType = response.headers.get("content-type") || "";
+  const contentType =
+    response.headers.get("content-type") || "";
 
-  if (contentType.includes("application/json") ||
-      contentType.includes("text/html")) {
+  if (
+    contentType.includes("application/json") ||
+    contentType.includes("text/html")
+  ) {
     throw new Error(
       "O servidor não devolveu um ficheiro de áudio válido."
     );
@@ -285,13 +348,14 @@ async function processVersion(profile, index) {
   const url = URL.createObjectURL(blob);
 
   return {
-    title: names[profile],
-    description: profile === "natural"
-      ? "Masterização natural, com equilíbrio e dinâmica."
-      : "Masterização moderna, com presença e maior controlo.",
+    title: `${profileNames[profile]} · ${styleName}`,
+    description:
+      profile === "natural"
+        ? `Perfil natural com ajustes para ${styleName}.`
+        : `Perfil moderno com ajustes para ${styleName}.`,
     blob,
     url,
-    filename: `levi-master-${profile}.${extension}`
+    filename: `levi-master-${style}-${profile}.${extension}`
   };
 }
 
@@ -304,6 +368,7 @@ if (form) {
     clearError();
 
     const result = $("result");
+
     if (result) {
       result.replaceChildren();
       setVisible(result, false);
@@ -330,14 +395,23 @@ if (form) {
 
       versions.push(await processVersion("natural", 1));
 
-      setProgress(55, "Primeira versão concluída. A preparar a segunda...");
+      setProgress(
+        55,
+        "Primeira versão concluída. A preparar a segunda..."
+      );
 
       versions.push(await processVersion("modern", 2));
 
       showVersions(versions);
-      setProgress(100, "Concluído! Os teus áudios estão prontos.");
+
+      setProgress(
+        100,
+        "Concluído! Os teus áudios estão prontos."
+      );
     } catch (error) {
-      versions.forEach((version) => URL.revokeObjectURL(version.url));
+      versions.forEach((version) => {
+        URL.revokeObjectURL(version.url);
+      });
 
       showError(
         error instanceof Error
@@ -346,7 +420,10 @@ if (form) {
       );
 
       const progressText = $("progressText");
-      if (progressText) progressText.textContent = "O processamento falhou.";
+
+      if (progressText) {
+        progressText.textContent = "O processamento falhou.";
+      }
     } finally {
       isProcessing = false;
 
