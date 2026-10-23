@@ -23,12 +23,13 @@
   <section class="hero">
     <div class="eyebrow"><span></span> AI AUDIO STUDIO</div>
     <h1>O teu som.<br><em>Pronto para brilhar.</em></h1>
-    <p>Prepara as tuas vozes, mistura a instrumental e aperfeiçoa a tua música com controlos de masterização. Compara duas versões antes de descarregar.</p>
+    <p>Prepara as tuas vozes, mistura a instrumental e aperfeiçoa a tua música com controlos de masterização. Escolhe o teu estilo e compara duas versões antes de descarregar.</p>
     <div class="meters">
-      <div><strong>24-bit</strong><small>WAV HQ</small></div>
-      <div><strong>320 kbps</strong><small>MP3</small></div>
-      <div><strong>44.1 kHz</strong><small>OUTPUT</small></div>
+      <div><strong>WAV HQ</strong><small>ÁUDIO</small></div>
+      <div><strong>MP3</strong><small>EXPORTAÇÃO</small></div>
+      <div><strong>44.1 kHz*</strong><small>OUTPUT</small></div>
     </div>
+    <p><small>*A frequência final depende da configuração do processamento.</small></p>
   </section>
 
   <section class="studio">
@@ -42,7 +43,7 @@
 
     <div class="modes">
       <button type="button" class="mode active" data-mode="mix">
-        <span>✳</span><b>Mix & Master</b><small>Instrumental + voz</small>
+        <span>✳</span><b>Mix &amp; Master</b><small>Instrumental + voz</small>
       </button>
       <button type="button" class="mode" data-mode="master">
         <span>◉</span><b>Master Only</b><small>Música já misturada</small>
@@ -127,16 +128,65 @@
         </label>
       </div>
 
+      <div class="subheading">05 / ESTILO MUSICAL</div>
+      <p>Escolhe o estilo que melhor combina com a tua música.</p>
+
+      <div class="profiles">
+        <label class="profile-option">
+          <input type="radio" name="style" value="natural" checked>
+          <span><b>Natural</b><small>Equilíbrio e som natural.</small></span>
+        </label>
+
+        <label class="profile-option">
+          <input type="radio" name="style" value="trap">
+          <span><b>Trap</b><small>Graves fortes e som moderno.</small></span>
+        </label>
+
+        <label class="profile-option">
+          <input type="radio" name="style" value="rap">
+          <span><b>Rap / Hip-Hop</b><small>Voz em destaque e graves firmes.</small></span>
+        </label>
+
+        <label class="profile-option">
+          <input type="radio" name="style" value="drill">
+          <span><b>Drill</b><small>Graves marcantes e presença.</small></span>
+        </label>
+
+        <label class="profile-option">
+          <input type="radio" name="style" value="rnb">
+          <span><b>R&amp;B</b><small>Som suave e vocal destacado.</small></span>
+        </label>
+
+        <label class="profile-option">
+          <input type="radio" name="style" value="afrobeat">
+          <span><b>Afrobeat</b><small>Ritmo, corpo e brilho.</small></span>
+        </label>
+
+        <label class="profile-option">
+          <input type="radio" name="style" value="pop">
+          <span><b>Pop</b><small>Brilho e equilíbrio moderno.</small></span>
+        </label>
+      </div>
+
       <div class="format">
-        <div><b>Formato de exportação</b><small>Escolhe como queres descarregar</small></div>
+        <div>
+          <b>Formato de exportação</b>
+          <small>Escolhe como queres descarregar</small>
+        </div>
         <div class="format-options">
-          <label><input type="radio" name="format" value="wav" checked><span>WAV <small>24-bit</small></span></label>
-          <label><input type="radio" name="format" value="mp3"><span>MP3 <small>320 kbps</small></span></label>
+          <label>
+            <input type="radio" name="format" value="wav" checked>
+            <span>WAV <small>Áudio sem perdas</small></span>
+          </label>
+          <label>
+            <input type="radio" name="format" value="mp3">
+            <span>MP3 <small>320 kbps*</small></span>
+          </label>
         </div>
       </div>
 
       <div class="notice">
-        ⓘ O processamento atual inclui mistura e filtros de masterização. A correção automática de afinação e o alinhamento vocal inteligente serão disponibilizados após a integração dos respetivos motores.
+        ⓘ Os estilos aplicam ajustes de mistura e masterização. A correção automática de afinação (autotune real) e o alinhamento vocal inteligente ainda precisam de integração própria. A qualidade e as especificações finais dependem do processamento do servidor.
       </div>
 
       <button id="submit" class="submit" type="submit">
@@ -144,7 +194,10 @@
       </button>
 
       <div id="progressWrap" class="progress-wrap hidden">
-        <div class="progress-head"><span id="progressText">A processar áudio…</span><span id="progressPct">Aguarda</span></div>
+        <div class="progress-head">
+          <span id="progressText">A processar áudio…</span>
+          <span id="progressPct">Aguarda</span>
+        </div>
         <div class="progress"><span></span></div>
       </div>
 
@@ -163,6 +216,7 @@
 
   <footer>LEVI MASTER AI <span>•</span> STUDIO PRO · PROCESSAMENTO REAL DE ÁUDIO</footer>
 </main>
+
 <script src="/static/app.js"></script>
 </body>
 </html>
